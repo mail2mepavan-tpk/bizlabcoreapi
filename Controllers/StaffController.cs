@@ -34,7 +34,7 @@ namespace bizlabcoreapi.Controllers
         }
 
         // GET: AllStaff
-        [HttpGet("authenticate/{username}/{password}")]
+        [HttpPost("authenticate")]
         public async Task<IActionResult> Authenticate(string username, string password)
         {
             return Ok(StaffAuthorize(username, password));

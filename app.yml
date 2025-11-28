@@ -1,0 +1,5 @@
+    runtime: aspnetcore
+    env: flex
+    # You can add more configurations here, e.g., resources, environment variables
+    # env_variables:
+    ASPNETCORE_ENVIRONMENT: Production

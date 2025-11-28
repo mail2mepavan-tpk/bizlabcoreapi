@@ -1,0 +1,116 @@
+﻿using bizlabcoreapi.Data;
+using bizlabcoreapi.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Linq;
+using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.Extensions.Configuration;
+
+namespace bizlabcoreapi.Data
+{
+    public class PatientData
+    {
+        private readonly IConfiguration _configuration;
+
+        public PatientData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public static string InsertPatientSql = @"
+        INSERT INTO patients (
+            id, client_id, legacy_id,
+            first_name, last_name, name, email, phone,
+            address_street, address_city, address_state, address_zip,
+            patient_status, account_status,
+            nickname, title, birth_date, company, email_opt_in, sms_opt_in,
+            memo, cancellation_list, first_clinical_service_complete,
+            first_clinical_service_date, membership_status, membership_start_date,
+            membership_type, phone_work, phone_mobile,
+            notes, created_at, updated_at
+        )
+        VALUES (
+            @id, @client_id, @legacy_id,
+            @first_name, @last_name, @name, @email, @phone,
+            @address_street, @address_city, @address_state, @address_zip,
+            @patient_status, @account_status,
+            @nickname, @title, @birth_date, @company, @email_opt_in, @sms_opt_in,
+            @memo, @cancellation_list, @first_clinical_service_complete,
+            @first_clinical_service_date, @membership_status, @membership_start_date,
+            @membership_type, @phone_work, @phone_mobile,
+            @notes, @created_at, @updated_at
+        );
+    ";
+
+        public void InsertPatient(Patient p)
+        {
+            var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
+            using (var connection = new NpgsqlConnection(connString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand(PatientData.InsertPatientSql, connection))
+                {
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    cmd.Parameters.AddWithValue("@id", p.Id);
+                    cmd.Parameters.AddWithValue("@client_id", (object?)p.ClientId ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@legacy_id", (object?)p.LegacyId ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@first_name", (object?)p.FirstName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@last_name", (object?)p.LastName ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@name", (object?)p.Name ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@email", (object?)p.Email ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@phone", (object?)p.Phone ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@address_street", (object?)p.AddressStreet ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@address_city", (object?)p.AddressCity ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@address_state", (object?)p.AddressState ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@address_zip", (object?)p.AddressZip ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@patient_status", (object?)p.PatientStatus ?? "active");
+                    cmd.Parameters.AddWithValue("@account_status", (object?)p.AccountStatus ?? "active");
+
+                    cmd.Parameters.AddWithValue("@nickname", (object?)p.Nickname ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@title", (object?)p.Title ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@birth_date", (object?)p.BirthDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@company", (object?)p.Company ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@email_opt_in", p.EmailOptIn);
+                    cmd.Parameters.AddWithValue("@sms_opt_in", p.SmsOptIn);
+                    cmd.Parameters.AddWithValue("@memo", (object?)p.Memo ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@cancellation_list", p.CancellationList);
+                    cmd.Parameters.AddWithValue("@first_clinical_service_complete", p.FirstClinicalServiceComplete);
+                    cmd.Parameters.AddWithValue("@first_clinical_service_date", (object?)p.FirstClinicalServiceDate ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@membership_status", (object?)p.MembershipStatus ?? "none");
+                    cmd.Parameters.AddWithValue("@membership_start_date", (object?)p.MembershipStartDate ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@membership_type", (object?)p.MembershipType ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@phone_work", (object?)p.PhoneWork ?? DBNull.Value);
+                    cmd.Parameters.AddWithValue("@phone_mobile", (object?)p.PhoneMobile ?? DBNull.Value);
+
+                    //cmd.Parameters.AddWithValue("@resources", p.Resources != null
+                    //    ? Newtonsoft.Json.JsonConvert.SerializeObject(p.Resources)
+                    //    : "[]");
+
+                    cmd.Parameters.AddWithValue("@notes", (object?)p.Notes ?? DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("@created_at", p.CreatedAt);
+                    cmd.Parameters.AddWithValue("@updated_at", p.UpdatedAt);
+
+                    cmd.ExecuteNonQuery();
+                };
+            }
+        }
+    }
+}

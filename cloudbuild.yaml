@@ -1,0 +1,16 @@
+ options:
+    logging: CLOUD_LOGGING_ONLY
+    pool: {}
+  projectId: project-4f1029cf-64a8-40f6-988
+  steps:
+  - name: gcr.io/k8s-skaffold/pack
+    entrypoint: pack
+    args:
+    - build
+    - us-central1-docker.pkg.dev/project-4f1029cf-64a8-40f6-988/bizlabdockerrepository/api-service
+    - --builder
+    - gcr.io/buildpacks/builder:latest
+    - --network
+    - cloudbuild
+  images:
+  - us-central1-docker.pkg.dev/project-4f1029cf-64a8-40f6-988/bizlabdockerrepository/api-service
