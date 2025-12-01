@@ -55,6 +55,36 @@ namespace bizlabcoreapi.Data
         );
     ";
 
+        public void DeletePatient(string id) 
+        {
+            var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
+            var results = new List<Dictionary<string, object>>();
+            using (var connection = new NpgsqlConnection(connString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("DELETE FROM patients where id='" + id + "'", connection))
+                {
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    int recs = cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdatePatientInactive(string id)
+        {
+            var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
+            var results = new List<Dictionary<string, object>>();
+            using (var connection = new NpgsqlConnection(connString))
+            {
+                connection.Open();
+                using (var cmd = new NpgsqlCommand("UPDATE patients set patient_status='inactive' where id='" + id + "'", connection))
+                {
+                    cmd.CommandType = System.Data.CommandType.Text;
+                    int recs = cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public string GetPatients()
         {
             var connString = _configuration.GetConnectionString("bizlabcoreapiContext");

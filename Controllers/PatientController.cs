@@ -50,10 +50,17 @@ namespace bizlabcoreapi.Controllers
         {
         }
 
+        [HttpPut("inactive/{id}")]
+        public void Inactive(string id)
+        {
+            new Data.PatientData().UpdatePatientInactive(id);
+        }
+
         // DELETE api/<PatientController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public void Delete(string id)
         {
+            new Data.PatientData().DeletePatient(id);
         }
     }
 }
