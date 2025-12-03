@@ -23,9 +23,9 @@ namespace bizlabcoreapi.Controllers
     {
         // GET: api/<PatientController>
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string authId)
         {
-            var response = new Data.PatientData().GetPatients();
+            var response = new Data.PatientData().GetPatients(authId);
             return Ok(response);
         }
 
@@ -38,10 +38,10 @@ namespace bizlabcoreapi.Controllers
 
         // POST api/<PatientController>
         [HttpPost]
-        public void Post(Models.Patient patientData)
+        public void Post(Models.Patient patientData, string authId)
         {
             patientData.Id = Guid.NewGuid();
-            new Data.PatientData().InsertPatient(patientData);
+            new Data.PatientData().InsertPatient(patientData, authId);
         }
 
         // PUT api/<PatientController>/5
@@ -58,9 +58,9 @@ namespace bizlabcoreapi.Controllers
 
         // DELETE api/<PatientController>/5
         [HttpDelete("{id}")]
-        public void Delete(string id)
+        public void Delete(string id, string authId)
         {
-            new Data.PatientData().DeletePatient(id);
+            new Data.PatientData().DeletePatient(id, authId);
         }
     }
 }

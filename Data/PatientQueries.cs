@@ -55,18 +55,25 @@ namespace bizlabcoreapi.Data
         );
     ";
 
-        public void DeletePatient(string id) 
+        public void DeletePatient(string id, string authId) 
         {
-            var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
-            var results = new List<Dictionary<string, object>>();
-            using (var connection = new NpgsqlConnection(connString))
+            var secureUserData = new SecureUserData();
+            if (secureUserData.IsSecure(authId))
             {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("DELETE FROM patients where id='" + id + "'", connection))
+                var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
+                var results = new List<Dictionary<string, object>>();
+                using (var connection = new NpgsqlConnection(connString))
                 {
-                    cmd.CommandType = System.Data.CommandType.Text;
-                    int recs = cmd.ExecuteNonQuery();
+                    connection.Open();
+                    using (var cmd = new NpgsqlCommand("DELETE FROM patients where id='" + id + "'", connection))
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        int recs = cmd.ExecuteNonQuery();
+                    }
                 }
+            }
+            else {
+                throw new UnauthorizedAccessException("Authentication Failed");
             }
         }
 
@@ -85,91 +92,107 @@ namespace bizlabcoreapi.Data
             }
         }
 
-        public string GetPatients()
+        public string GetPatients(string authId)
         {
-            var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
-            var results = new List<Dictionary<string, object>>();
-            using (var connection = new NpgsqlConnection(connString))
+            var secureUserData = new SecureUserData();
+            if (secureUserData.IsSecure(authId))
             {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand("SELECT * FROM patients", connection))
+                var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
+                var results = new List<Dictionary<string, object>>();
+                using (var connection = new NpgsqlConnection(connString))
                 {
-                    cmd.CommandType = System.Data.CommandType.Text;
-                    using (var reader = cmd.ExecuteReader())
+                    connection.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM patients", connection))
                     {
-                        while (reader.Read())
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        using (var reader = cmd.ExecuteReader())
                         {
-                            var row = new Dictionary<string, object>();
-
-                            for (int i = 0; i < reader.FieldCount; i++)
+                            while (reader.Read())
                             {
-                                row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                                var row = new Dictionary<string, object>();
+
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    row[reader.GetName(i)] = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                                }
+                                results.Add(row);
                             }
-                            results.Add(row);
                         }
                     }
                 }
-            }
 
-            string json = JsonConvert.SerializeObject(results, Formatting.Indented);
-            return json;
+                string json = JsonConvert.SerializeObject(results, Formatting.Indented);
+                return json;
+            }
+            else
+            {
+               throw new UnauthorizedAccessException("Authentication Failed");
+            }
         }
 
-        public void InsertPatient(Patient p)
+        public void InsertPatient(Patient p, string authId)
         {
-            var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
-            using (var connection = new NpgsqlConnection(connString))
+            var secureUserData = new SecureUserData();
+            if (secureUserData.IsSecure(authId))
             {
-                connection.Open();
-                using (var cmd = new NpgsqlCommand(PatientData.InsertPatientSql, connection))
+                var connString = _configuration.GetConnectionString("bizlabcoreapiContext");
+                using (var connection = new NpgsqlConnection(connString))
                 {
-                    cmd.CommandType = System.Data.CommandType.Text;
-                    cmd.Parameters.AddWithValue("@id", p.Id);
-                    cmd.Parameters.AddWithValue("@client_id", (object?)p.ClientId ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@legacy_id", (object?)p.LegacyId ?? DBNull.Value);
+                    connection.Open();
+                    using (var cmd = new NpgsqlCommand(PatientData.InsertPatientSql, connection))
+                    {
+                        cmd.CommandType = System.Data.CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", p.Id);
+                        cmd.Parameters.AddWithValue("@client_id", (object?)p.ClientId ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@legacy_id", (object?)p.LegacyId ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@first_name", (object?)p.FirstName ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@last_name", (object?)p.LastName ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@name", (object?)p.Name ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@email", (object?)p.Email ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@phone", (object?)p.Phone ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@first_name", (object?)p.FirstName ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@last_name", (object?)p.LastName ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@name", (object?)p.Name ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@email", (object?)p.Email ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@phone", (object?)p.Phone ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@address_street", (object?)p.AddressStreet ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@address_city", (object?)p.AddressCity ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@address_state", (object?)p.AddressState ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@address_zip", (object?)p.AddressZip ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@address_street", (object?)p.AddressStreet ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@address_city", (object?)p.AddressCity ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@address_state", (object?)p.AddressState ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@address_zip", (object?)p.AddressZip ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@patient_status", (object?)p.PatientStatus ?? "active");
-                    cmd.Parameters.AddWithValue("@account_status", (object?)p.AccountStatus ?? "active");
+                        cmd.Parameters.AddWithValue("@patient_status", (object?)p.PatientStatus ?? "active");
+                        cmd.Parameters.AddWithValue("@account_status", (object?)p.AccountStatus ?? "active");
 
-                    cmd.Parameters.AddWithValue("@nickname", (object?)p.Nickname ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@title", (object?)p.Title ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@birth_date", (object?)p.BirthDate ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@company", (object?)p.Company ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@email_opt_in", p.EmailOptIn);
-                    cmd.Parameters.AddWithValue("@sms_opt_in", p.SmsOptIn);
-                    cmd.Parameters.AddWithValue("@memo", (object?)p.Memo ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@cancellation_list", p.CancellationList);
-                    cmd.Parameters.AddWithValue("@first_clinical_service_complete", p.FirstClinicalServiceComplete);
-                    cmd.Parameters.AddWithValue("@first_clinical_service_date", (object?)p.FirstClinicalServiceDate ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@nickname", (object?)p.Nickname ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@title", (object?)p.Title ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@birth_date", (object?)p.BirthDate ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@company", (object?)p.Company ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@email_opt_in", p.EmailOptIn);
+                        cmd.Parameters.AddWithValue("@sms_opt_in", p.SmsOptIn);
+                        cmd.Parameters.AddWithValue("@memo", (object?)p.Memo ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@cancellation_list", p.CancellationList);
+                        cmd.Parameters.AddWithValue("@first_clinical_service_complete", p.FirstClinicalServiceComplete);
+                        cmd.Parameters.AddWithValue("@first_clinical_service_date", (object?)p.FirstClinicalServiceDate ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@membership_status", (object?)p.MembershipStatus ?? "none");
-                    cmd.Parameters.AddWithValue("@membership_start_date", (object?)p.MembershipStartDate ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@membership_type", (object?)p.MembershipType ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@phone_work", (object?)p.PhoneWork ?? DBNull.Value);
-                    cmd.Parameters.AddWithValue("@phone_mobile", (object?)p.PhoneMobile ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@membership_status", (object?)p.MembershipStatus ?? "none");
+                        cmd.Parameters.AddWithValue("@membership_start_date", (object?)p.MembershipStartDate ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@membership_type", (object?)p.MembershipType ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@phone_work", (object?)p.PhoneWork ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@phone_mobile", (object?)p.PhoneMobile ?? DBNull.Value);
 
-                    //cmd.Parameters.AddWithValue("@resources", p.Resources != null
-                    //    ? Newtonsoft.Json.JsonConvert.SerializeObject(p.Resources)
-                    //    : "[]");
+                        //cmd.Parameters.AddWithValue("@resources", p.Resources != null
+                        //    ? Newtonsoft.Json.JsonConvert.SerializeObject(p.Resources)
+                        //    : "[]");
 
-                    cmd.Parameters.AddWithValue("@notes", (object?)p.Notes ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue("@notes", (object?)p.Notes ?? DBNull.Value);
 
-                    cmd.Parameters.AddWithValue("@created_at", p.CreatedAt);
-                    cmd.Parameters.AddWithValue("@updated_at", p.UpdatedAt);
+                        cmd.Parameters.AddWithValue("@created_at", p.CreatedAt);
+                        cmd.Parameters.AddWithValue("@updated_at", p.UpdatedAt);
 
-                    cmd.ExecuteNonQuery();
-                };
+                        cmd.ExecuteNonQuery();
+                    }
+                    ;
+                }
+            }
+            else {
+                throw new UnauthorizedAccessException("Authentication Failed");
             }
         }
     }
