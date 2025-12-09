@@ -53,4 +53,22 @@ namespace bizlabcoreapi.Models
         public DateTime UpdatedAt { get; set; }
     }
 
+    public class MasterPatient()
+    {
+        public string id { get; set; }
+        public string patient_id { get; set; }
+        public string client_id { get; set; }
+        public string first_name { get; set; }
+        public string last_name { get; set; }
+        public string email { get; set; }
+        public string phone { get; set; }
+        public string date_of_birth { get; set; }
+        public string address { get; set; }
+        public string city { get; set; }
+        public string state { get; set; }
+        public string zip_code { get; set; }
+        public DateTime created_at { get; set; }
+        public DateTime updated_at { get; set; }
+    }
+
 }

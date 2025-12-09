@@ -14,6 +14,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace bizlabcoreapi.Data
 {
@@ -55,7 +57,7 @@ namespace bizlabcoreapi.Data
         );
     ";
 
-        public void DeletePatient(string id, string authId) 
+        public void DeletePatient(string id, string authId)
         {
             var secureUserData = new SecureUserData();
             if (secureUserData.IsSecure(authId))
@@ -126,7 +128,7 @@ namespace bizlabcoreapi.Data
             }
             else
             {
-               throw new UnauthorizedAccessException("Authentication Failed");
+                throw new UnauthorizedAccessException("Authentication Failed");
             }
         }
 
@@ -195,5 +197,68 @@ namespace bizlabcoreapi.Data
                 throw new UnauthorizedAccessException("Authentication Failed");
             }
         }
+
+        public string InsertMasterPatient(MasterPatient patientMaster)
+        {
+            //JObject patientMaster = JObject.Parse(inputData);
+            const string sql = @"
+        INSERT INTO master_patients (
+            id,
+            patient_id,
+            client_id,
+            first_name,
+            last_name,
+            email,
+            phone,
+            date_of_birth,
+            address,
+            city,
+            state,
+            zip_code,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            @id,
+            @patient_id,
+            @client_id,
+            @first_name,
+            @last_name,
+            @email,
+            @phone,
+            @date_of_birth,
+            @address,
+            @city,
+            @state,
+            @zip_code,
+            NOW(),
+            NOW()
+        );
+    ";
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+
+            using var cmd = new NpgsqlCommand(sql, conn);
+
+            cmd.Parameters.AddWithValue("id", new Guid(patientMaster.id));
+            cmd.Parameters.AddWithValue("patient_id", patientMaster.patient_id);
+            cmd.Parameters.AddWithValue("client_id", patientMaster.client_id);
+            cmd.Parameters.AddWithValue("first_name", patientMaster.first_name ?? "");
+            cmd.Parameters.AddWithValue("last_name", patientMaster.last_name ?? "");
+            cmd.Parameters.AddWithValue("email", patientMaster.email ?? "");
+            cmd.Parameters.AddWithValue("phone", patientMaster.phone ?? "");
+            cmd.Parameters.AddWithValue("date_of_birth", DateTime.Parse(patientMaster.date_of_birth) != null ? DateTime.Parse(patientMaster.date_of_birth) : null);
+            cmd.Parameters.AddWithValue("address", patientMaster.address ?? "");
+            cmd.Parameters.AddWithValue("city", patientMaster.city ?? "");
+            cmd.Parameters.AddWithValue("state", patientMaster.state ?? "");
+            cmd.Parameters.AddWithValue("zip_code", patientMaster.zip_code ?? "");
+
+            cmd.ExecuteNonQuery();
+
+            return patientMaster.id;
+        }
+
+      
     }
 }
