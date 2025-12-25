@@ -67,7 +67,7 @@ namespace bizlabcoreapi.Data
                 using (var connection = new NpgsqlConnection(connString))
                 {
                     connection.Open();
-                    using (var cmd = new NpgsqlCommand("DELETE FROM patients where id='" + id + "'", connection))
+                    using (var cmd = new NpgsqlCommand("DELETE FROM master_patients where id='" + id + "'", connection))
                     {
                         cmd.CommandType = System.Data.CommandType.Text;
                         int recs = cmd.ExecuteNonQuery();
@@ -86,7 +86,7 @@ namespace bizlabcoreapi.Data
             using (var connection = new NpgsqlConnection(connString))
             {
                 connection.Open();
-                using (var cmd = new NpgsqlCommand("UPDATE patients set patient_status='inactive' where id='" + id + "'", connection))
+                using (var cmd = new NpgsqlCommand("UPDATE master_patients set patient_status='inactive' where id='" + id + "'", connection))
                 {
                     cmd.CommandType = System.Data.CommandType.Text;
                     int recs = cmd.ExecuteNonQuery();
@@ -104,7 +104,7 @@ namespace bizlabcoreapi.Data
                 using (var connection = new NpgsqlConnection(connString))
                 {
                     connection.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT * FROM patients", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT * FROM master_patients", connection))
                     {
                         cmd.CommandType = System.Data.CommandType.Text;
                         using (var reader = cmd.ExecuteReader())
