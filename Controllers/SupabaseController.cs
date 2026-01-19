@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using Azure.Core;
+using bizlabcoreapi.Data;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -21,9 +24,11 @@ namespace bizlabcoreapi.Controllers
 
         // GET api/<SupabaseController>/5
         [HttpGet("{tableName}")]
-        public Task<string> Get(string tableName)
+        public string Get(string tableName)
         {
-            return new SupabaseRestClient().GetRawDataAsync(tableName);
+            var jsonData = new SupabaseRestClient().GetRawDataAsync(tableName);
+            new CafeOrderData().InsertData(jsonData);
+            return "";
         }
 
         // POST api/<SupabaseController>
@@ -51,26 +56,19 @@ namespace bizlabcoreapi.Controllers
         private readonly string apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0a2Zjd2RtbXdheXp5aXhscHVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE2NTIzODYsImV4cCI6MjA2NzIyODM4Nn0.VkFA1SIOLgddP-P_KjFdvDyiNdUSgYfbcP5UvOardKI"; // Replace with your public anon key
         private readonly HttpClient client = new HttpClient();
 
-        public async Task<string> GetRawDataAsync(string tableName)
+        public string GetRawDataAsync(string tableName)
         {
+            var range = "0-10000";
             client.DefaultRequestHeaders.Clear();
             // Add the required headers for authentication
             client.DefaultRequestHeaders.Add("ApiKey", apiKey);
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-
-            HttpResponseMessage response = await client.GetAsync(apiUrl + tableName);
-
-            if (response.IsSuccessStatusCode)
-            {
-                string jsonResponse = await response.Content.ReadAsStringAsync();
-                // You can deserialize the JSON string into your C# model here
-                // var cities = JsonSerializer.Deserialize<List<City>>(jsonResponse);
-                return jsonResponse;
-            }
-            else
-            {
-                throw new Exception($"Error: {response.StatusCode}");
-            }
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Range", $"{range}");
+            //client.DefaultRequestHeaders.Range = new RangeHeaderValue(0, 5000);
+            //client.DefaultRequestHeaders.Add("Range", $"Range {range}");
+            Task<string> response = client.GetStringAsync(apiUrl + tableName + "?select=*");
+            string jsonResponse = response.Result;
+            return jsonResponse;
         }
     }
 
