@@ -36,7 +36,7 @@ namespace bizlabcoreapi.Data
         }
         //private readonly bizlabcoreapiContext _context;
 
-        public void InsertData(dynamic jsonData)
+        public string InsertData(dynamic jsonData)
         {
             AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
@@ -131,6 +131,8 @@ namespace bizlabcoreapi.Data
                     cmd.ExecuteNonQuery();
                 }
             }
+
+            return cafeRecs.Count.ToString();
         }
     }
 }

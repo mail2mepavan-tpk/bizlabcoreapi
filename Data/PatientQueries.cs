@@ -312,5 +312,216 @@ namespace bizlabcoreapi.Data
                 throw new UnauthorizedAccessException("Authentication Failed");
             }
         }
+
+        public string InsertData(dynamic data)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            dynamic patientMasters = JsonConvert.DeserializeObject<dynamic>(data);
+            var sql = @"
+INSERT INTO master_patients (
+    id,
+    patient_id,
+    first_name,
+    last_name,
+    phone,
+    email,
+    address,
+    city,
+    state,
+    zip_code,
+    patient_type,
+    first_visit_date,
+    first_visit_location,
+    first_visit_service,
+    date_added,
+    last_contact_date,
+    last_visit_date,
+    status,
+    status_reason,
+    status_changed_date,
+    referral_source,
+    marketing_consent,
+    email_opt_in,
+    sms_opt_in,
+    created_at,
+    updated_at,
+    created_by,
+    updated_by,
+    submission_id,
+    dob,
+    preferred_location,
+    tt_enrollment_status,
+    tt_current_week,
+    tt_program_id,
+    tt_start_date,
+    tt_completion_date,
+    date_of_birth,
+    gender,
+    client_id,
+    signature_circle_id,
+    signature_circle_status,
+    signature_circle_joined_at,
+    signature_circle_referrer_id,
+    signature_circle_qr_code,
+    signature_circle_referral_count,
+    signature_circle_total_earned,
+    signature_circle_auto_reload,
+    signature_circle_auto_reload_amount,
+    signature_circle_auto_reload_threshold,
+    is_active,
+    notes,
+    call_status,
+    call_notes,
+    next_appointment_date,
+    family_group_id
+) VALUES (
+    @id,
+    @patient_id,
+    @first_name,
+    @last_name,
+    @phone,
+    @email,
+    @address,
+    @city,
+    @state,
+    @zip_code,
+    @patient_type,
+    @first_visit_date,
+    @first_visit_location,
+    @first_visit_service,
+    @date_added,
+    @last_contact_date,
+    @last_visit_date,
+    @status,
+    @status_reason,
+    @status_changed_date,
+    @referral_source,
+    @marketing_consent,
+    @email_opt_in,
+    @sms_opt_in,
+    @created_at,
+    @updated_at,
+    @created_by,
+    @updated_by,
+    @submission_id,
+    @dob,
+    @preferred_location,
+    @tt_enrollment_status,
+    @tt_current_week,
+    @tt_program_id,
+    @tt_start_date,
+    @tt_completion_date,
+    @date_of_birth,
+    @gender,
+    @client_id,
+    @signature_circle_id,
+    @signature_circle_status,
+    @signature_circle_joined_at,
+    @signature_circle_referrer_id,
+    @signature_circle_qr_code,
+    @signature_circle_referral_count,
+    @signature_circle_total_earned,
+    @signature_circle_auto_reload,
+    @signature_circle_auto_reload_amount,
+    @signature_circle_auto_reload_threshold,
+    @is_active,
+    @notes,
+    @call_status,
+    @call_notes,
+    @next_appointment_date,
+    @family_group_id
+);
+";
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+            using var cmdDelete = new NpgsqlCommand("delete from master_patients", conn);
+            cmdDelete.ExecuteNonQuery();
+            int updatedRecs = 0;
+            for (int i = 0; i < patientMasters.Count; i ++)
+            {
+                var patientMaster = patientMasters[i];
+                //using var cmdDelete = new NpgsqlCommand("select count(1) from master_patients where id='" + patientMaster.id.Value + "'", conn);
+                //var recsData = cmdDelete.ExecuteScalar().ToString();
+
+                if(updatedRecs >= 0)
+                {
+                    using var cmd = new NpgsqlCommand(sql, conn);
+
+                    cmd.Parameters.AddWithValue("id", Guid.Parse(patientMaster.id.Value));
+                    cmd.Parameters.AddWithValue("patient_id", patientMaster.patient_id.Value);
+                    cmd.Parameters.AddWithValue("first_name", patientMaster.first_name.Value != null ? patientMaster.first_name.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("last_name", patientMaster.last_name.Value != null ? patientMaster.last_name.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("phone", patientMaster.phone.Value != null ? patientMaster.phone.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("email", patientMaster.email.Value != null ? patientMaster.email.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("address", patientMaster.address.Value != null ? patientMaster.address.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("city", patientMaster.city.Value != null ? patientMaster.city.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("state", patientMaster.state.Value != null ? patientMaster.state.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("zip_code", patientMaster.zip_code.Value != null ? patientMaster.zip_code.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("patient_type", patientMaster.patient_type.Value != null ? patientMaster.patient_type.Value : DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("first_visit_date", DBNull.Value);
+                    cmd.Parameters.AddWithValue("first_visit_location", DBNull.Value);
+                    cmd.Parameters.AddWithValue("first_visit_service", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("date_added", patientMaster.date_added.Value != null ? DateTimeOffset.Parse(patientMaster.date_added.Value.ToString()) : DBNull.Value);
+                    cmd.Parameters.AddWithValue("last_contact_date", DBNull.Value);
+                    cmd.Parameters.AddWithValue("last_visit_date", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("status", patientMaster.status.Value != null ? patientMaster.status.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("status_reason", DBNull.Value);
+                    cmd.Parameters.AddWithValue("status_changed_date", DBNull.Value);
+                    cmd.Parameters.AddWithValue("referral_source", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("marketing_consent", false);
+                    cmd.Parameters.AddWithValue("email_opt_in", true);
+                    cmd.Parameters.AddWithValue("sms_opt_in", true);
+
+                    cmd.Parameters.AddWithValue("created_at", DateTimeOffset.Parse(patientMaster.created_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("updated_at", DateTimeOffset.Parse(patientMaster.updated_at.Value.ToString()));
+
+                    cmd.Parameters.AddWithValue("created_by", DBNull.Value);
+                    cmd.Parameters.AddWithValue("updated_by", DBNull.Value);
+                    cmd.Parameters.AddWithValue("submission_id", DBNull.Value);
+                    cmd.Parameters.AddWithValue("dob", DBNull.Value);
+                    cmd.Parameters.AddWithValue("preferred_location", DBNull.Value);
+                    cmd.Parameters.AddWithValue("tt_enrollment_status", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("tt_current_week", 0);
+                    cmd.Parameters.AddWithValue("tt_program_id", DBNull.Value);
+                    cmd.Parameters.AddWithValue("tt_start_date", DBNull.Value);
+                    cmd.Parameters.AddWithValue("tt_completion_date", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("date_of_birth", patientMaster.date_of_birth.Value != null ? DateTime.Parse(patientMaster.date_of_birth.Value.ToString()) : DBNull.Value);
+                    cmd.Parameters.AddWithValue("gender", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("client_id", patientMaster.client_id.Value);
+
+                    cmd.Parameters.AddWithValue("signature_circle_id", DBNull.Value);
+                    cmd.Parameters.AddWithValue("signature_circle_status", patientMaster.signature_circle_status.Value != null ? patientMaster.signature_circle_status.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("signature_circle_joined_at", DBNull.Value);
+                    cmd.Parameters.AddWithValue("signature_circle_referrer_id", DBNull.Value);
+                    cmd.Parameters.AddWithValue("signature_circle_qr_code", DBNull.Value);
+
+                    cmd.Parameters.AddWithValue("signature_circle_referral_count", 0);
+                    cmd.Parameters.AddWithValue("signature_circle_total_earned", 0.00m);
+                    cmd.Parameters.AddWithValue("signature_circle_auto_reload", false);
+                    cmd.Parameters.AddWithValue("signature_circle_auto_reload_amount", 25.00m);
+                    cmd.Parameters.AddWithValue("signature_circle_auto_reload_threshold", 25.00m);
+
+                    cmd.Parameters.AddWithValue("is_active", true);
+                    cmd.Parameters.AddWithValue("notes", DBNull.Value);
+                    cmd.Parameters.AddWithValue("call_status", patientMaster.call_status.Value != null ? patientMaster.call_status.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("call_notes", DBNull.Value);
+                    cmd.Parameters.AddWithValue("next_appointment_date", DBNull.Value);
+                    cmd.Parameters.AddWithValue("family_group_id", DBNull.Value);
+
+                    cmd.ExecuteNonQuery();
+                    updatedRecs++;
+                }
+            }
+
+            return "Supabase Records : " + patientMasters.Count.ToString() + " ## GCP Updated Recs : " + updatedRecs.ToString();
+        }
     }
 }

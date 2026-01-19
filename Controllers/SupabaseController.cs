@@ -27,8 +27,18 @@ namespace bizlabcoreapi.Controllers
         public string Get(string tableName)
         {
             var jsonData = new SupabaseRestClient().GetRawDataAsync(tableName);
-            new CafeOrderData().InsertData(jsonData);
-            return "";
+            switch (tableName)
+            {
+                case "cafe_orders":
+                    return new CafeOrderData().InsertData(jsonData);
+                    break;
+                case "master_patients":
+                    return new PatientData().InsertData(jsonData);
+                    break;
+                default:
+                    break;
+            }
+            return "0";
         }
 
         // POST api/<SupabaseController>
