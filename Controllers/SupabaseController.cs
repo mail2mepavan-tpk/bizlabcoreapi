@@ -29,11 +29,23 @@ namespace bizlabcoreapi.Controllers
             var jsonData = new SupabaseRestClient().GetRawDataAsync(tableName);
             switch (tableName)
             {
+                case "service_summaries":
+                    return new ServiceSummariesData().InsertData(jsonData);
+                    break;
+                case "cafe_order_item_mods":
+                    return new CafeOrderItemMods().InsertData(jsonData);
+                    break;
+                case "cafe_order_items":
+                    return new CafeOrderItems().InsertData(jsonData);
+                    break;
                 case "cafe_orders":
                     return new CafeOrderData().InsertData(jsonData);
                     break;
                 case "master_patients":
                     return new PatientData().InsertData(jsonData);
+                    break;
+                case "patient_check_ins":
+                    return new PatientCheckInsData().InsertData(jsonData);
                     break;
                 default:
                     break;
@@ -74,8 +86,10 @@ namespace bizlabcoreapi.Controllers
             client.DefaultRequestHeaders.Add("ApiKey", apiKey);
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
             client.DefaultRequestHeaders.TryAddWithoutValidation("Range", $"{range}");
-            //client.DefaultRequestHeaders.Range = new RangeHeaderValue(0, 5000);
-            //client.DefaultRequestHeaders.Add("Range", $"Range {range}");
+            if(tableName == "service_summaries")
+            {
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Profile", $"accounting");
+            }
             Task<string> response = client.GetStringAsync(apiUrl + tableName + "?select=*");
             string jsonResponse = response.Result;
             return jsonResponse;
