@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -509,6 +510,480 @@ VALUES (
             }
 
             return cafeRecs.Count.ToString();
+        }
+    }
+
+    public class PatientFormData
+    {
+        private readonly IConfiguration _configuration;
+
+        public PatientFormData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public string InsertData(dynamic jsonData)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
+            //supaBaseConn.Open();
+            //using (var cmd = new NpgsqlCommand("select * from cafe_orders", supaBaseConn))
+            //{
+            //    var res = cmd.ExecuteScalar();
+            //}
+
+
+            string sql = @"
+INSERT INTO patient_forms (
+    id,
+    patient_id,
+    form_type,
+    form_data,
+    uploaded_files,
+    submitted_at,
+    status,
+    reviewed_by,
+    reviewed_at,
+    notes,
+    created_at,
+    updated_at,
+    raw_data,
+    patient_name
+)
+VALUES (
+    @id,
+    @patient_id,
+    @form_type,
+    @form_data,
+    @uploaded_files,
+    @submitted_at,
+    @status,
+    @reviewed_by,
+    @reviewed_at,
+    @notes,
+    @created_at,
+    @updated_at,
+    @raw_data,
+    @patient_name
+);
+";
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+            using (var cmd = new NpgsqlCommand("delete from patient_forms", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+
+            dynamic cafeRecs = JsonConvert.DeserializeObject<dynamic>(jsonData);
+            for (int i = 0; i < cafeRecs.Count; i++)
+            {
+                var patientForm = cafeRecs[i];
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", Guid.Parse(patientForm.id.Value));
+                    cmd.Parameters.AddWithValue("@patient_id", Guid.Parse(patientForm.patient_id.Value));
+                    cmd.Parameters.AddWithValue("@form_type", patientForm.form_type.Value);
+
+                    // form_data → jsonb
+                    cmd.Parameters.Add("@form_data", NpgsqlDbType.Jsonb).Value = patientForm.form_data.ToString();
+                    cmd.Parameters.Add("@uploaded_files", NpgsqlDbType.Jsonb).Value = patientForm.uploaded_files.ToString();
+                    cmd.Parameters.AddWithValue("@submitted_at", DateTime.Parse(patientForm.submitted_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@status", patientForm.id.Value);
+                    cmd.Parameters.AddWithValue("@reviewed_by", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@reviewed_at", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@notes", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@created_at", DateTime.Parse(patientForm.created_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@updated_at", DateTime.Parse(patientForm.updated_at.Value.ToString()));
+                    cmd.Parameters.Add("@raw_data", NpgsqlDbType.Jsonb).Value = DBNull.Value;
+                    cmd.Parameters.AddWithValue("@patient_name", patientForm.patient_name.Value != null ? patientForm.patient_name.Value : DBNull.Value);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return cafeRecs.Count.ToString();
+        }
+    }
+
+    public class DailyEntriesData
+    {
+        private readonly IConfiguration _configuration;
+
+        public DailyEntriesData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public string InsertData(dynamic jsonData)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
+            //supaBaseConn.Open();
+            //using (var cmd = new NpgsqlCommand("select * from cafe_orders", supaBaseConn))
+            //{
+            //    var res = cmd.ExecuteScalar();
+            //}
+
+
+            string sql = @"
+INSERT INTO accounting.daily_entries (
+    id,
+    entry_date,
+    location_id,
+    location_name,
+    total_patients,
+    new_patients,
+    returning_patients,
+    total_services,
+    total_service_revenue,
+    total_tips,
+    total_cafe_sales,
+    total_retail_sales,
+    grand_total,
+    daily_notes,
+    created_at,
+    created_by,
+    updated_at,
+    updated_by,
+    export_timestamp,
+    exported_by
+)
+VALUES (
+    @id,
+    @entry_date,
+    @location_id,
+    @location_name,
+    @total_patients,
+    @new_patients,
+    @returning_patients,
+    @total_services,
+    @total_service_revenue,
+    @total_tips,
+    @total_cafe_sales,
+    @total_retail_sales,
+    @grand_total,
+    @daily_notes,
+    @created_at,
+    @created_by,
+    @updated_at,
+    @updated_by,
+    @export_timestamp,
+    @exported_by
+);
+";
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+            using (var cmd = new NpgsqlCommand("delete from accounting.daily_entries", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+
+            dynamic entries = JsonConvert.DeserializeObject<dynamic>(jsonData);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", Guid.Parse(entry.id.Value));
+                    cmd.Parameters.AddWithValue("@entry_date", DateTime.Parse(entry.entry_date.Value.ToString()).Date);
+                    cmd.Parameters.AddWithValue("@location_id", entry.location_id.Value);
+                    cmd.Parameters.AddWithValue("@location_name", entry.location_name.Value);
+                    cmd.Parameters.AddWithValue("@total_patients", entry.total_patients.Value);
+                    cmd.Parameters.AddWithValue("@new_patients", entry.new_patients.Value);
+                    cmd.Parameters.AddWithValue("@returning_patients", entry.returning_patients.Value);
+                    cmd.Parameters.AddWithValue("@total_services", entry.total_services.Value);
+                    cmd.Parameters.AddWithValue("@total_service_revenue", entry.total_service_revenue.Value);
+                    cmd.Parameters.AddWithValue("@total_tips", entry.total_tips.Value);
+                    cmd.Parameters.AddWithValue("@total_cafe_sales", entry.total_cafe_sales.Value);
+                    cmd.Parameters.AddWithValue("@total_retail_sales", entry.total_retail_sales.Value);
+                    cmd.Parameters.AddWithValue("@grand_total", entry.grand_total.Value);
+                    cmd.Parameters.AddWithValue("@daily_notes", entry.daily_notes.Value != null ? entry.daily_notes.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@created_at", DateTime.Parse(entry.created_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@created_by", entry.created_by.Value);
+                    cmd.Parameters.AddWithValue("@updated_at", DateTime.Parse(entry.updated_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@updated_by", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@export_timestamp", DateTime.Parse(entry.export_timestamp.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@exported_by", entry.exported_by.Value);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return entries.Count.ToString();
+        }
+    }
+
+    public class MasterPatientsUploadData
+    {
+        private readonly IConfiguration _configuration;
+
+        public MasterPatientsUploadData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public string InsertData(dynamic jsonData)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
+            //supaBaseConn.Open();
+            //using (var cmd = new NpgsqlCommand("select * from cafe_orders", supaBaseConn))
+            //{
+            //    var res = cmd.ExecuteScalar();
+            //}
+            string sql = @"
+INSERT INTO master_patient_uploads (
+    id,
+    patient_id,
+    file_name,
+    file_type,
+    file_category,
+    file_url,
+    file_size,
+    mime_type,
+    document_date,
+    description,
+    is_lab_result,
+    lab_provider,
+    lab_ordered_by,
+    results_summary,
+    abnormal_findings,
+    is_patient_visible,
+    is_provider_only,
+    uploaded_date,
+    uploaded_by,
+    uploaded_at,
+    reviewed_by,
+    reviewed_date
+)
+VALUES (
+    @id,
+    @patient_id,
+    @file_name,
+    @file_type,
+    @file_category,
+    @file_url,
+    @file_size,
+    @mime_type,
+    @document_date,
+    @description,
+    @is_lab_result,
+    @lab_provider,
+    @lab_ordered_by,
+    @results_summary,
+    @abnormal_findings,
+    @is_patient_visible,
+    @is_provider_only,
+    @uploaded_date,
+    @uploaded_by,
+    @uploaded_at,
+    @reviewed_by,
+    @reviewed_date
+);
+";
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+            using (var cmd = new NpgsqlCommand("delete from master_patient_uploads", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+
+            dynamic entries = JsonConvert.DeserializeObject<dynamic>(jsonData);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", Guid.Parse(entry.id.Value));
+                    cmd.Parameters.AddWithValue("@patient_id", Guid.Parse(entry.id.Value));
+                    cmd.Parameters.AddWithValue("@file_name", entry.file_name.Value);
+                    cmd.Parameters.AddWithValue("@file_type", entry.file_type.Value);
+                    cmd.Parameters.AddWithValue("@file_category", entry.file_category.Value);
+                    cmd.Parameters.AddWithValue("@file_url", entry.file_url.Value);
+                    cmd.Parameters.AddWithValue("@file_size", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@mime_type", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@document_date", DateTime.Parse(entry.document_date.Value.ToString()).Date);
+                    cmd.Parameters.AddWithValue("@description", entry.description.Value);
+                    cmd.Parameters.AddWithValue("@is_lab_result", entry.is_lab_result.Value);
+                    cmd.Parameters.AddWithValue("@lab_provider", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@lab_ordered_by", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@results_summary", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@abnormal_findings", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@is_patient_visible", entry.is_patient_visible.Value);
+                    cmd.Parameters.AddWithValue("@is_provider_only", entry.is_provider_only.Value);
+                    cmd.Parameters.AddWithValue("@uploaded_date", DateTime.Parse(entry.uploaded_date.Value.ToString()).Date);
+                    cmd.Parameters.AddWithValue("@uploaded_by", entry.uploaded_by.Value);
+                    cmd.Parameters.AddWithValue("@uploaded_at", DateTime.Parse(entry.uploaded_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@reviewed_by", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@reviewed_date", DBNull.Value);
+                    //cmd.Parameters.AddWithValue("@created_at", DateTime.Parse(entry.created_at.Value.ToString()));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return entries.Count.ToString();
+        }
+    }
+
+    public class BioSyncEmailVerificationsData
+    {
+        private readonly IConfiguration _configuration;
+
+        public BioSyncEmailVerificationsData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public string InsertData(dynamic jsonData)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
+            //supaBaseConn.Open();
+            //using (var cmd = new NpgsqlCommand("select * from cafe_orders", supaBaseConn))
+            //{
+            //    var res = cmd.ExecuteScalar();
+            //}
+            string sql = @"
+INSERT INTO biosync_email_verifications (
+    id,
+    email,
+    submission_id,
+    verification_token,
+    verified,
+    verified_at,
+    created_at
+)
+VALUES (
+    @id,
+    @email,
+    @submission_id,
+    @verification_token,
+    @verified,
+    @verified_at,
+    @created_at
+);
+";
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+            using (var cmd = new NpgsqlCommand("delete from biosync_email_verifications", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+
+            dynamic entries = JsonConvert.DeserializeObject<dynamic>(jsonData);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", Guid.Parse(entry.id.Value));
+                    cmd.Parameters.AddWithValue("@email", entry.email.Value != null ? entry.email.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("@submission_id",entry.submission_id.Value);
+                    cmd.Parameters.AddWithValue("@verification_token",entry.verification_token.Value);
+                    cmd.Parameters.AddWithValue("@verified", entry.verified.Value);
+                    cmd.Parameters.AddWithValue("@verified_at", DBNull.Value);
+                    cmd.Parameters.AddWithValue("@created_at", DateTime.Parse(entry.created_at.Value.ToString()));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return entries.Count.ToString();
+        }
+    }
+
+    public class BioSyncEmailQueueData
+    {
+        private readonly IConfiguration _configuration;
+
+        public BioSyncEmailQueueData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public string InsertData(dynamic jsonData)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
+            //supaBaseConn.Open();
+            //using (var cmd = new NpgsqlCommand("select * from cafe_orders", supaBaseConn))
+            //{
+            //    var res = cmd.ExecuteScalar();
+            //}
+            string sql = @"
+INSERT INTO biosync_email_queue (
+    id,
+    recipient,
+    subject,
+    html_content,
+    verification_token,
+    submission_id,
+    status,
+    created_at,
+    sent_at
+)
+VALUES (
+    @id,
+    @recipient,
+    @subject,
+    @html_content,
+    @verification_token,
+    @submission_id,
+    @status,
+    @created_at,
+    @sent_at
+);
+";
+
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+            using (var cmd = new NpgsqlCommand("delete from biosync_email_queue", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+
+            dynamic entries = JsonConvert.DeserializeObject<dynamic>(jsonData);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var entry = entries[i];
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@id", Guid.Parse(entry.id.Value));
+                    cmd.Parameters.AddWithValue("@recipient", entry.recipient.Value);
+                    cmd.Parameters.AddWithValue("@subject", entry.subject.Value);
+                    cmd.Parameters.AddWithValue("@html_content", entry.html_content.Value);
+                    cmd.Parameters.AddWithValue("@verification_token",entry.verification_token.Value);
+                    cmd.Parameters.AddWithValue("@submission_id", entry.submission_id.Value);
+                    cmd.Parameters.AddWithValue("@status", entry.status.Value);
+                    cmd.Parameters.AddWithValue("@created_at", DateTime.Parse(entry.created_at.Value.ToString()));
+                    cmd.Parameters.AddWithValue("@sent_at", DBNull.Value);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+
+            return entries.Count.ToString();
         }
     }
 }

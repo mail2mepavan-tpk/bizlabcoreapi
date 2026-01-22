@@ -22,13 +22,44 @@ namespace bizlabcoreapi.Controllers
             return new string[] { "value1", "value2" };
         }
 
+        /// <summary>
+        ///  Data Sync TableNames Below:
+        ///  
+        ///  biosync_email_queue
+        ///  biosync_email_verifications
+        ///  master_patient_uploads 
+        ///  daily_entries
+        ///  patient_forms
+        ///  service_summaries
+        ///  cafe_order_item_mods
+        ///  cafe_order_items
+        ///  cafe_orders
+        ///  master_patients
+        ///  patient_check_ins
+        ///  
+        /// </summary>
         // GET api/<SupabaseController>/5
         [HttpGet("{tableName}")]
         public string Get(string tableName)
         {
-            var jsonData = new SupabaseRestClient().GetRawDataAsync(tableName);
-            switch (tableName)
+            var jsonData = new SupabaseRestClient().GetRawDataAsync(tableName.ToString());
+            switch (tableName.ToString())
             {
+                case "biosync_email_queue":
+                    return new BioSyncEmailQueueData().InsertData(jsonData);
+                    break;
+                case "biosync_email_verifications":
+                    return new BioSyncEmailVerificationsData().InsertData(jsonData);
+                    break;
+                case "master_patient_uploads":
+                    return new MasterPatientsUploadData().InsertData(jsonData);
+                    break;
+                case "daily_entries":
+                    return new DailyEntriesData().InsertData(jsonData);
+                    break;
+                case "patient_forms":
+                    return new PatientFormData().InsertData(jsonData);
+                    break;
                 case "service_summaries":
                     return new ServiceSummariesData().InsertData(jsonData);
                     break;
@@ -86,7 +117,7 @@ namespace bizlabcoreapi.Controllers
             client.DefaultRequestHeaders.Add("ApiKey", apiKey);
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
             client.DefaultRequestHeaders.TryAddWithoutValidation("Range", $"{range}");
-            if(tableName == "service_summaries")
+            if(tableName == "service_summaries" || tableName == "daily_entries")
             {
                 client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Profile", $"accounting");
             }
@@ -94,6 +125,21 @@ namespace bizlabcoreapi.Controllers
             string jsonResponse = response.Result;
             return jsonResponse;
         }
+    }
+
+    public enum TableName
+    {
+        biosync_email_queue,
+        biosync_email_verifications,
+        master_patient_uploads ,
+        daily_entries,
+        patient_forms,
+        service_summaries,
+        cafe_order_item_mods,
+        cafe_order_items,
+        cafe_orders,
+        master_patients,
+        patient_check_ins
     }
 
 }
