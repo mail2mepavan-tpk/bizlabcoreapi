@@ -1,4 +1,5 @@
-﻿using bizlabcoreapi.Data;
+﻿using bizlabcoreapi.Controllers;
+using bizlabcoreapi.Data;
 using bizlabcoreapi.Models;
 using Humanizer;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using static Azure.Core.HttpHeader;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -984,6 +986,62 @@ VALUES (
             }
 
             return entries.Count.ToString();
+        }
+    }
+
+    public class DataReaderData
+    {
+        private readonly IConfiguration _configuration;
+
+        public DataReaderData()
+        {
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _configuration = configuration;
+        }
+        //private readonly bizlabcoreapiContext _context;
+
+        public string GetData(string tableName)
+        {
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            //using var supaBaseConn = new NpgsqlConnection(_configuration.GetConnectionString("SupabaseConnection"));
+            //supaBaseConn.Open();
+            //using (var cmd = new NpgsqlCommand("select * from cafe_orders", supaBaseConn))
+            //{
+            //    var res = cmd.ExecuteScalar();
+            //}
+           
+
+
+            using var conn = new NpgsqlConnection(_configuration.GetConnectionString("bizlabcoreapiContext"));
+            conn.Open();
+
+            var cmd = new NpgsqlCommand("select * from " + tableName, conn);
+            using var reader = cmd.ExecuteReader();
+
+            var rows = new List<Dictionary<string, object>>();
+
+            while (reader.Read())
+            {
+                var row = new Dictionary<string, object>();
+
+                for (int i = 0; i < reader.FieldCount; i++)
+                {
+                    var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                    row[reader.GetName(i)] = value;
+                }
+
+                rows.Add(row);
+            }
+
+            // Convert to JSON string
+            string json = System.Text.Json.JsonSerializer.Serialize(
+                rows,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
+
+            return json;
         }
     }
 }

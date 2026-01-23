@@ -16,10 +16,10 @@ namespace bizlabcoreapi.Controllers
     public class SupabaseController : ControllerBase
     {
         // GET: api/<SupabaseController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        [HttpGet("read/{tableName}")]
+        public string ReadTableData(string tableName)
         {
-            return new string[] { "value1", "value2" };
+            return new DataReaderData().GetData(tableName);
         }
 
         /// <summary>
